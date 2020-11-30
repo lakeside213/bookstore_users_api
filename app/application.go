@@ -1,7 +1,14 @@
 package app
 
-import "fmt"
+import (
+	"github.com/gin-gonic/gin"
+)
+
+var (
+	router = gin.Default()
+)
 
 func StartApp() {
-	fmt.Println("lo")
+	mapUrls()
+	router.Run(":8080")
 }
