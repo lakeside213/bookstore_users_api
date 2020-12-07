@@ -16,14 +16,16 @@ type User struct {
 	Email     string `json:"email"`
 	CreatedAt string `json:"created_at"`
 	Status    string `json:"status"`
-	Password  string `json:"-"`
+	Password  string `json:"password"`
 }
+
+type Users []User
 
 func (user *User) Validate() *errors.RestErr {
 	user.Email = strings.TrimSpace(strings.ToLower(user.Email))
 	user.LastName = strings.TrimSpace(user.LastName)
-	if user.Password == "" {
-		return errors.NewBadRequestError("no password")
-	}
+	// if user.Password == "" {
+	// 	return errors.NewBadRequestError("no password")
+	// }
 	return nil
 }

@@ -3,7 +3,6 @@ package users
 import (
 	"fmt"
 	"microservice_tut/users_api/datasources/mysql/usersdb"
-	"microservice_tut/users_api/utils/date"
 	"microservice_tut/users_api/utils/errors"
 	"microservice_tut/users_api/utils/mysql_utils"
 )
@@ -28,7 +27,7 @@ func (user *User) Save() *errors.RestErr {
 	}
 
 	defer stmt.Close()
-	user.CreatedAt = date.GetNowDBFormat()
+
 	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.CreatedAt, user.Status, user.Password)
 
 	if saveErr != nil {

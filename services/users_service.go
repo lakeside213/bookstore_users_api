@@ -2,21 +2,40 @@ package services
 
 import (
 	"microservice_tut/users_api/domain/users"
+	"microservice_tut/users_api/utils/crypto_utils"
+	"microservice_tut/users_api/utils/date"
 	"microservice_tut/users_api/utils/errors"
 )
 
-func CreateUser(user users.User) (*users.User, *errors.RestErr) {
+var (
+	UsersService usersServiceInterface = &usersService{}
+)
+
+type usersService struct {
+}
+
+type usersServiceInterface interface {
+	CreateUser(users.User) (*users.User, *errors.RestErr)
+	GetUser(int64) (*users.User, *errors.RestErr)
+	UpdateUser(bool, users.User) (*users.User, *errors.RestErr)
+	DeleteUser(int64) *errors.RestErr
+	Search(string) (users.Users, *errors.RestErr)
+}
+
+func (s *usersService) CreateUser(user users.User) (*users.User, *errors.RestErr) {
 	if err := user.Validate(); err != nil {
 		return nil, err
 	}
 	user.Status = users.StatusActive
+	user.CreatedAt = date.GetNowDBFormat()
+	user.Password = crypto_utils.GetMd5(user.Password)
 	if err := user.Save(); err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func GetUser(ID int64) (*users.User, *errors.RestErr) {
+func (s *usersService) GetUser(ID int64) (*users.User, *errors.RestErr) {
 	res := &users.User{ID: ID}
 	if err := res.Get(); err != nil {
 		return nil, err
@@ -24,8 +43,8 @@ func GetUser(ID int64) (*users.User, *errors.RestErr) {
 	return res, nil
 }
 
-func UpdateUser(isPatch bool, user users.User) (*users.User, *errors.RestErr) {
-	current, err := GetUser(user.ID)
+func (s *usersService) UpdateUser(isPatch bool, user users.User) (*users.User, *errors.RestErr) {
+	current, err := s.GetUser(user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -57,12 +76,12 @@ func UpdateUser(isPatch bool, user users.User) (*users.User, *errors.RestErr) {
 	return current, nil
 }
 
-func DeleteUser(ID int64) *errors.RestErr {
+func (s *usersService) DeleteUser(ID int64) *errors.RestErr {
 	user := &users.User{ID: ID}
 	return user.Delete()
 }
 
-func Search(status string) ([]users.User, *errors.RestErr) {
+func (s *usersService) Search(status string) (users.Users, *errors.RestErr) {
 	dao := &users.User{}
 	return dao.FindByStatus(status)
 

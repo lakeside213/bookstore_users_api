@@ -10,6 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func TetsServiceInterface() {
+
+}
+
 func getUserID(userID string) (int64, *errors.RestErr) {
 	ID, err := strconv.ParseInt(userID, 10, 64)
 	if err != nil {
@@ -29,14 +33,14 @@ func CreateUser(c *gin.Context) {
 		c.JSON(rErr.Status, rErr)
 		return
 	}
-	res, e := services.CreateUser(user)
+	userRes, e := services.UsersService.CreateUser(user)
 	if e != nil {
 
 		c.JSON(e.Status, e)
 		return
 	}
 
-	c.JSON(http.StatusCreated, res)
+	c.JSON(http.StatusCreated, userRes.Marshall(c.GetHeader("X-Public") == "true"))
 }
 func GetUser(c *gin.Context) {
 	ID, err := getUserID(c.Param("id"))
@@ -44,12 +48,12 @@ func GetUser(c *gin.Context) {
 		c.JSON(err.Status, err)
 		return
 	}
-	user, getErr := services.GetUser(ID)
+	user, getErr := services.UsersService.GetUser(ID)
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, user.Marshall(c.GetHeader("X-Public") == "true"))
 }
 func UpdateUser(c *gin.Context) {
 	ID, err := getUserID(c.Param("id"))
@@ -65,14 +69,14 @@ func UpdateUser(c *gin.Context) {
 	}
 	user.ID = ID
 	isPatch := c.Request.Method == http.MethodPatch
-	res, e := services.UpdateUser(isPatch, user)
+	userRes, e := services.UsersService.UpdateUser(isPatch, user)
 	if e != nil {
 
 		c.JSON(e.Status, e)
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, userRes.Marshall(c.GetHeader("X-Public") == "true"))
 }
 
 func DeleteUser(c *gin.Context) {
@@ -82,7 +86,7 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	if err := services.DeleteUser(ID); err != nil {
+	if err := services.UsersService.DeleteUser(ID); err != nil {
 		c.JSON(err.Status, err)
 		return
 	}
@@ -93,11 +97,13 @@ func DeleteUser(c *gin.Context) {
 func Search(c *gin.Context) {
 	status := c.Query("status")
 
-	users, err := services.Search(status)
+	users, err := services.UsersService.Search(status)
 
 	if err != nil {
 		c.JSON(err.Status, err)
 		return
 	}
+
+	users.Marshall(c.GetHeader("X-Public") == "true")
 	c.JSON(http.StatusOK, users)
 }
